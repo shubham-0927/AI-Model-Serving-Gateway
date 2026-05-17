@@ -1,0 +1,2 @@
+REQUEST_LOG_QUEUE = "request_log_queue"
+REQUEST_LOG_BATCH_SIZE = 100

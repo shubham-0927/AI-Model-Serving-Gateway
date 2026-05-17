@@ -1,0 +1,93 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+.env/
+.venv/
+myenv/
+
+# Environment Variables
+.env
+.env.*
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+logs/
+
+# IDEs
+.vscode/
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Pytest
+.pytest_cache/
+
+# Coverage Reports
+.coverage
+htmlcov/
+
+# mypy
+.mypy_cache/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Temporary Files
+tmp/
+temp/
+
+# SQLite
+*.sqlite3
+*.db
+
+# Redis dump
+dump.rdb
+
+# Model Files
+models/
+checkpoints/
+weights/
+
+# Cache
+.cache/
+
+# Runtime files
+*.pid
+
+# Generated metrics/reports
+reports/
+results/
+
+# Secrets / Certificates
+certs/
+certificates/
+*.pem
+*.key
+*.crt
+
+# FastAPI/Uvicorn
+uvicorn.log
+
+# Testing artifacts
+artifacts/
+
+# Node modules (if frontend added later)
+node_modules/
+
+# Mac/Linux swap files
+*.swp
+*.swo
