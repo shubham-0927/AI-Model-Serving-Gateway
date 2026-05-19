@@ -19,7 +19,7 @@ class ProviderRouter:
 
         self.strategies = {
             "round_robin": RoundRobinStrategy(),
-            "latency_aware":AdaptiveRoutingStrategy()
+            "adaptive_routing":AdaptiveRoutingStrategy()
         }
 
     def get_provider(
