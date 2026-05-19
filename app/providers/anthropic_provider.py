@@ -1,7 +1,10 @@
 import asyncio
 
 from app.providers.base_provider import BaseProvider
-
+from app.simulation.provider_simulation import (
+    SIMULATION_CONFIG,
+    simulate_provider_behavior
+)
 
 class AnthropicProvider(BaseProvider):
 
@@ -10,7 +13,8 @@ class AnthropicProvider(BaseProvider):
         prompt: str
     ):
 
-        await asyncio.sleep(1)
+        # await asyncio.sleep(1)
+        latency = await simulate_provider_behavior("anthropic")
 
         return {
             "provider": "anthropic",
@@ -21,6 +25,10 @@ class AnthropicProvider(BaseProvider):
         self,
         prompt: str
     ):
+        
+        config = SIMULATION_CONFIG[
+            "anthropic"
+        ]
 
         words = [
             "This",
@@ -32,6 +40,7 @@ class AnthropicProvider(BaseProvider):
 
         for word in words:
 
-            await asyncio.sleep(0.5)
+            # await asyncio.sleep(0.5)
+            await asyncio.sleep(config["stream_chunk_delay"])
 
             yield word + " "

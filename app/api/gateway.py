@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from app.core.api_key_auth import get_api_key
+from app.core.retry import MAX_RETRIES, exponential_backoff
 from app.models.api_key import APIKey
 import asyncio
 from app.services.rate_limiter import check_rate_limit
@@ -19,7 +20,7 @@ from app.registry.provider_registry import ProviderRegistry
 import uuid
 from app.core.logger import logger
 
-from app.core.metrics import REQUEST_COUNT, REQUEST_LATENCY, FALLBACK_COUNT, ACTIVE_STREAMS, STREAM_COUNT
+from app.core.metrics import REQUEST_COUNT, REQUEST_LATENCY, FALLBACK_COUNT, ACTIVE_STREAMS, RETRY_COUNT, STREAM_COUNT
 from app.core.metrics import STREAM_FAILURES, STREAM_DURATION, TOKENS_STREAMED
 from app.core.tracing import tracer
 from opentelemetry import trace
@@ -104,7 +105,7 @@ async def completions(
     # ---------------------------------------------------
     # Streaming Path
     # ---------------------------------------------------
-
+    
     if request.stream:
 
         # NOTE:
@@ -149,8 +150,9 @@ async def completions(
                 STREAM_COUNT.inc()
 
                 token_count = 0
-
+                ProviderRegistry.increment_active_requests(candidate_provider)
                 try:
+                    
 
                     async for chunk in (
                         provider.stream_response(
@@ -209,6 +211,9 @@ async def completions(
                 finally:
 
                     ACTIVE_STREAMS.dec()
+                    ProviderRegistry.decrement_active_requests(
+                        candidate_provider
+                    )
 
                     STREAM_DURATION.observe(
                         time.time() - stream_start
@@ -286,11 +291,43 @@ async def completions(
                     )
                 )
 
-                response = (
-                    await provider.generate_response(
-                        prompt=request.prompt
+                # response = (
+                #     await provider.generate_response(
+                #         prompt=request.prompt
+                #     )
+                # )
+
+
+                for attempt in range(MAX_RETRIES):
+                    ProviderRegistry.increment_active_requests(
+                        candidate_provider
                     )
-                )
+
+                    try:
+
+                        response = (await provider.generate_response(prompt=request.prompt))
+
+                        break
+
+                    except Exception as retry_error:
+
+                        RETRY_COUNT.labels(provider=candidate_provider).inc()
+                        current_span.set_attribute("retry_attempt",attempt)
+                        logger.warning(
+                            "provider_retry",
+                            extra={
+                                "extra_data": {
+                                    "provider": candidate_provider,
+                                    "attempt": attempt + 1
+                                }
+                            }
+                        )
+
+                        if attempt == MAX_RETRIES - 1:
+                            raise retry_error
+                        await exponential_backoff(attempt)
+
+
                 # tokens_used = len(
                 #     str(response).split()
                 # )
@@ -334,6 +371,10 @@ async def completions(
                 )
 
                 last_error = str(e)
+            finally:
+                ProviderRegistry.decrement_active_requests(
+                    candidate_provider
+                )
 
         else:
 
@@ -415,6 +456,8 @@ async def completions(
         status="success"
 
     ).inc()
+
+    
 
     # ---------------------------------------------------
     # Response

@@ -9,3 +9,7 @@ STREAM_COUNT = Counter("gateway_stream_total","Total streaming requests")
 STREAM_FAILURES = Counter("gateway_stream_failures_total","Total stream failures")
 STREAM_DURATION = Histogram("gateway_stream_duration_seconds","Streaming request duration")
 TOKENS_STREAMED = Counter("gateway_tokens_streamed_total","Total streamed tokens")
+SIMULATED_FAILURES = Counter("gateway_simulated_failures_total", "Total simulated provider failures",
+                             ["provider"])
+RETRY_COUNT = Counter("gateway_retry_total", "Total provider retries", ["provider"])
+PROVIDER_ACTIVE_LOAD = Gauge("provider_active_requests","Current provider active requests",["provider"])

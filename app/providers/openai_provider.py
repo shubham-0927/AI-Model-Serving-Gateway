@@ -1,6 +1,11 @@
 import asyncio
 import random
 
+from app.simulation.provider_simulation import (
+    SIMULATION_CONFIG,
+    simulate_provider_behavior
+)
+
 from app.providers.base_provider import BaseProvider
 class OpenAIProvider(BaseProvider):
     # async def generate_response(self, prompt: str):
@@ -14,14 +19,15 @@ class OpenAIProvider(BaseProvider):
         prompt: str
     ):
 
-        await asyncio.sleep(1)
+        # await asyncio.sleep(1)
 
-        # Simulate random provider failure
-        if random.random() < 0.5:
+        # # Simulate random provider failure
+        # if random.random() < 0.5:
 
-            raise Exception(
-                "OpenAI provider unavailable"
-            )
+        #     raise Exception(
+        #         "OpenAI provider unavailable"
+        #     )
+        latency = await simulate_provider_behavior("openai")
 
         return {
             "provider": "openai",
@@ -43,6 +49,9 @@ class OpenAIProvider(BaseProvider):
         #         "data":token
         #     }
         #     await asyncio.sleep(1)
+        config = SIMULATION_CONFIG[
+            "openai"
+        ]
         words = [
             "This",
             "is",
@@ -53,6 +62,7 @@ class OpenAIProvider(BaseProvider):
 
         for word in words:
 
-            await asyncio.sleep(0.5)
+            # await asyncio.sleep(0.5)
+            await asyncio.sleep(config["stream_chunk_delay"])
 
             yield word + " "

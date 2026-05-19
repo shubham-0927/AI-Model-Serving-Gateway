@@ -80,6 +80,7 @@ later optimize with Redis batching
 * right now logging only to terminal use some filesystem or db to store the logs (for error checking and traceback)
 
 * **imp** need to remove the failing logic in openai provider code.
+* Update the routing thresholds from fix developer define numbers to provider specific or use some ML model to learn the trend and update the thresholds.
 ## Implemention Notes
 
 
@@ -168,6 +169,34 @@ Separate:
 * using weighted score:latency_weight = 0.5, reliability_weight = 0.3, cost_weight = 0.2
 * using user tier aware weighting but later can use matrix factorizations to have personalization routing
 
+## circuit breakers 
+* for failer mitigation
+* **circuit breaker pattern**:
+```
+| State     | Meaning          |
+| --------- | ---------------- |
+| CLOSED    | provider healthy |
+| OPEN      | provider blocked |
+| HALF_OPEN | testing recovery |
+```
+*When HALF_OPEN: allow only few test requests: VERY important
+
+## exponential back-off
+* if failure happen (dont spam retries)
+```
+fail
+wait 200ms
+retry
+
+fail
+wait 400ms
+retry
+
+fail
+wait 800ms
+```
+* add jitter with delay, wait for delay+jitter(a random nouce) time
+    - it prevent **Thunderaing herd problem**(when many clients try to reattempt at the same time (simultaneuosly) cause outrage again at the server)
 ## TO Run:
 * Run once for db/init 
 ```
