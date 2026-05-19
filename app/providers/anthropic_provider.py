@@ -22,17 +22,16 @@ class AnthropicProvider(BaseProvider):
         prompt: str
     ):
 
-        tokens = [
-            "Anthropic",
-            "Anthropic streaming",
-            "Anthropic streaming response"
+        words = [
+            "This",
+            "is",
+            "a",
+            "streaming",
+            "response"
         ]
 
-        for token in tokens:
+        for word in words:
 
-            yield {
-                "event": "message",
-                "data": token
-            }
+            await asyncio.sleep(0.5)
 
-            await asyncio.sleep(1)
+            yield word + " "

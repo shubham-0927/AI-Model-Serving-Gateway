@@ -37,6 +37,34 @@ services:
 
     # ports:
     #   - "6379:6379"
+  
+  prometheus:
+    image: prom/prometheus
+    container_name: ai_gateway_prometheus
+
+    ports:
+      - "9090:9090"
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    container_name: ai_gateway_grafana
+
+    ports:
+      - "3000:3000"
+  
+  
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+
+    container_name: ai_gateway_jaeger
+
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
 
   nginx:
     image: nginx:latest

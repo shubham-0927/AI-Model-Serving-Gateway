@@ -1,1 +1,11 @@
 from prometheus_client import (Counter, Histogram, Gauge)
+REQUEST_COUNT = Counter("gateway_requests_total","Total gateway requests",["provider", "status"])
+REQUEST_LATENCY = Histogram("gateway_request_latency_seconds","Request latency",["provider"])
+FALLBACK_COUNT = Counter("gateway_fallback_total","Total provider fallbacks")
+PROVIDER_HEALTH = Gauge("provider_health_status", "Provider health status", ["provider"])
+
+ACTIVE_STREAMS = Gauge("gateway_active_streams", "Total streaming requests")
+STREAM_COUNT = Counter("gateway_stream_total","Total streaming requests")
+STREAM_FAILURES = Counter("gateway_stream_failures_total","Total stream failures")
+STREAM_DURATION = Histogram("gateway_stream_duration_seconds","Streaming request duration")
+TOKENS_STREAMED = Counter("gateway_tokens_streamed_total","Total streamed tokens")

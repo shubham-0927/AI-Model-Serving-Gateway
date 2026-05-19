@@ -12,3 +12,5 @@ class CompletionRequest(BaseModel):
     strategy: str | None = "round_robin"
 
     strict_provider: bool = False
+    
+    stream: bool = False

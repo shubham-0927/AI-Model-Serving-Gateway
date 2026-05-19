@@ -32,14 +32,27 @@ class OpenAIProvider(BaseProvider):
 
 
     async def stream_response(self, prompt:str):
-        tokens = [
-            "OpenAI",
-            "OpenAI streaming",
-            "OpenAI streaming response"
+        # tokens = [
+        #     "OpenAI",
+        #     "OpenAI streaming",
+        #     "OpenAI streaming response"
+        # ]
+        # for token in tokens:
+        #     yield{
+        #         "event":"message",
+        #         "data":token
+        #     }
+        #     await asyncio.sleep(1)
+        words = [
+            "This",
+            "is",
+            "a",
+            "streaming",
+            "response"
         ]
-        for token in tokens:
-            yield{
-                "event":"message",
-                "data":token
-            }
-            await asyncio.sleep(1)
+
+        for word in words:
+
+            await asyncio.sleep(0.5)
+
+            yield word + " "

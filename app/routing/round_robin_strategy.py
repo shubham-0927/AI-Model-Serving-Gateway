@@ -29,7 +29,8 @@ class RoundRobinStrategy(
 
     def select_provider(
         self,
-        providers: list
+        providers: list,
+        user_tier: str = "free"
     ):
 
         if not providers:

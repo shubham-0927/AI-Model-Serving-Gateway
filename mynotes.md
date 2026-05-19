@@ -79,8 +79,10 @@ later optimize with Redis batching
 
 * right now logging only to terminal use some filesystem or db to store the logs (for error checking and traceback)
 
-
+* **imp** need to remove the failing logic in openai provider code.
 ## Implemention Notes
+
+
 ## sesion.py
 * to work with relational databases python has toolkit (SQLAlchemy) to perform CRUD operation using python class and objects
     - SessionLocal = sessionmaker(
@@ -156,6 +158,16 @@ Separate:
 ```
 * metadata changes rarely, health changes constant (Different data lifecycles.)
 
+## For health check and provider score
+* using EMA(Exponential Moving Average)
+* score = success/latency(current)
+- **Problem** with this score:
+    -   fastest provider may be expensive
+    -   cheapest provider may be unreliable
+    -   most reliable provider may be slower
+* using weighted score:latency_weight = 0.5, reliability_weight = 0.3, cost_weight = 0.2
+* using user tier aware weighting but later can use matrix factorizations to have personalization routing
+
 ## TO Run:
 * Run once for db/init 
 ```
@@ -185,6 +197,7 @@ http://127.0.0.1:8000/v1/stream/completions
 ```
 docker compose exec redis redis-cli
 ```
+
 ### to test :
 * the endpoints:
 ```
@@ -194,6 +207,25 @@ docker compose exec redis redis-cli
   "prompt": "hello"
 }
 ```
+## to visualize
+* prometheus:
+```
+http://localhost:9090/
+```
+* grafana:
+```
+localhost:3000
+```
+
+* jeager:
+```
+http://localhost:16686
+```
+* metrics:
+```
+http://localhost/metrics
+```
+
 
 ### to start project in docker:
 ```

@@ -1,6 +1,9 @@
 from app.routing.round_robin_strategy import (
     RoundRobinStrategy
 )
+from app.routing.adaptive_routing_strategy import (
+    AdaptiveRoutingStrategy
+)
 
 from app.registry.provider_registry import ProviderRegistry
 
@@ -15,7 +18,8 @@ class ProviderRouter:
         
 
         self.strategies = {
-            "round_robin": RoundRobinStrategy()
+            "round_robin": RoundRobinStrategy(),
+            "latency_aware":AdaptiveRoutingStrategy()
         }
 
     def get_provider(
@@ -24,7 +28,8 @@ class ProviderRouter:
 
         strategy_name: str,
 
-        model_name: str | None = None
+        model_name: str | None = None,
+        user_tier:str = "free"
     ):
 
         strategy = self.strategies.get(
@@ -60,7 +65,8 @@ class ProviderRouter:
             )
 
         return strategy.select_provider(
-            healthy_providers
+            healthy_providers,
+            user_tier
         )
     
     def get_fallback_chain(
