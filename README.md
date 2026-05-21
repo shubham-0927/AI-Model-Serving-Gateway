@@ -222,15 +222,10 @@ POST /v1/completions
 
 ---
 
-## 🔮 Future Improvements
+## Notes
 
-- Kubernetes Deployment
-- Real LLM Provider Integration
-- Semantic Caching
-- GPU-aware Scheduling
-- ML-driven Routing Policies
-- CI/CD Pipelines
-- Advanced Benchmarking
+Current providers are simulated for infrastructure and orchestration testing.
+The architecture is designed to support real LLM providers later.
 
 ---
 
