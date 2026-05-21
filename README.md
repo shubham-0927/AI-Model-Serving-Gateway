@@ -1,6 +1,16 @@
 # AI Gateway Control Plane
 
-A production-oriented AI Gateway and Orchestration Platform built with FastAPI, Redis, Celery, PostgreSQL, Prometheus, Grafana, and OpenTelemetry.
+![AI Gateway Control Plane](https://img.shields.io/badge/AI%20Gateway-%F0%9F%A4%96-blue?style=for-the-badge&logo=ai)
+
+[![Python](https://img.shields.io/badge/Python-3.12-blue?style=flat-square&logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-v0.111-green?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/Docker-blue?style=flat-square&logo=docker)](https://www.docker.com/)
+[![Redis](https://img.shields.io/badge/Redis-red?style=flat-square&logo=redis)](https://redis.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+[![Celery](https://img.shields.io/badge/Celery-5.6.3-brightgreen?style=flat-square&logo=celery)](https://docs.celeryq.dev/)
+
+
+A production-oriented AI Gateway and orchestration platform for intelligent provider routing, distributed scheduling, and observability.
 
 The system acts as a centralized control plane for AI model providers, handling:
 
@@ -14,13 +24,38 @@ The system acts as a centralized control plane for AI model providers, handling:
 - tenant isolation
 - queue-based orchestration
 
-The project focuses on distributed systems and AI infrastructure engineering concepts rather than only model inference.
+> Focused on infrastructure engineering and reliability for AI systems, rather than only model inference.
 
 ---
 
-# Features
+## 🚀 Highlights
 
-## Gateway & Routing
+- Adaptive request routing across AI providers
+- Failover-aware retry engine with exponential backoff
+- Redis-backed shared state and Celery scheduling
+- Prometheus + Grafana + Jaeger observability
+- Tenant-aware quotas, token accounting, and API key auth
+
+---
+
+## 🧩 Built With
+
+| Category | Technology |
+|---|---|
+| API | FastAPI, Uvicorn |
+| Language | Python 3.12 |
+| State | Redis |
+| Queueing | Celery |
+| Database | PostgreSQL |
+| Observability | Prometheus, Grafana, Jaeger |
+| Tracing | OpenTelemetry |
+| Deployment | Docker, Docker Compose |
+
+---
+
+## 🌐 Features
+
+### Gateway & Routing
 
 - FastAPI-based AI Gateway
 - Provider Abstraction Layer
@@ -30,9 +65,7 @@ The project focuses on distributed systems and AI infrastructure engineering con
 - Reliability-aware Routing
 - Streaming Response Support
 
----
-
-## Reliability Engineering
+### Reliability Engineering
 
 - Retry Engine with Exponential Backoff
 - Circuit Breakers
@@ -41,9 +74,7 @@ The project focuses on distributed systems and AI infrastructure engineering con
 - Chaos Simulation
 - Simulated Provider Failures & Latency
 
----
-
-## Distributed Infrastructure
+### Distributed Infrastructure
 
 - Redis-backed Shared State
 - Celery Workers & Scheduled Tasks
@@ -53,9 +84,7 @@ The project focuses on distributed systems and AI infrastructure engineering con
 - Multi-tenant Isolation
 - Admission Control & Backpressure
 
----
-
-## Observability
+### Observability
 
 - Prometheus Metrics
 - Grafana Dashboards
@@ -64,9 +93,7 @@ The project focuses on distributed systems and AI infrastructure engineering con
 - Structured Logging
 - Queue & Latency Metrics
 
----
-
-## AI Platform Features
+### AI Platform Features
 
 - Token Usage Accounting
 - Token Budget Enforcement
@@ -77,7 +104,7 @@ The project focuses on distributed systems and AI infrastructure engineering con
 
 ---
 
-# Architecture
+## 🏗 Architecture
 
 ```text
                         +------------------+
@@ -120,40 +147,7 @@ The project focuses on distributed systems and AI infrastructure engineering con
 
 ---
 
-# Tech Stack
-
-| Layer | Technologies |
-|------|------|
-| API Gateway | FastAPI, Uvicorn |
-| Distributed State | Redis |
-| Background Jobs | Celery |
-| Database | PostgreSQL |
-| Reverse Proxy | Nginx |
-| Observability | Prometheus, Grafana, Jaeger |
-| Tracing | OpenTelemetry |
-| Containerization | Docker, Docker Compose |
-
----
-
-# Key Engineering Concepts
-
-This project implements several distributed systems and infrastructure engineering concepts:
-
-- Adaptive Request Routing
-- Distributed Circuit Breakers
-- Retry & Backoff Strategies
-- Queue Scheduling
-- Load Shedding
-- Admission Control
-- Fair Scheduling
-- Multi-tenant Isolation
-- Token Governance
-- Chaos Engineering Simulation
-- Observability-driven Infrastructure
-
----
-
-# Project Structure
+## 📁 Project Structure
 
 ```text
 app/
@@ -172,49 +166,33 @@ app/
 
 ---
 
-# Running the Project
+## ▶️ Running the Project
 
-## Start Services
+### Start Services
 
 ```bash
 docker compose up --build
 ```
 
----
+### API Docs
 
-## API Docs
-
-```text
 http://localhost:8000/docs
-```
 
----
+### Grafana Dashboard
 
-## Grafana Dashboard
-
-```text
 http://localhost:3000
-```
 
----
+### Prometheus
 
-## Prometheus
-
-```text
 http://localhost:9090
-```
 
----
+### Jaeger Tracing
 
-## Jaeger Tracing
-
-```text
 http://localhost:16686
-```
 
 ---
 
-# Example Request
+## 🧪 Example Request
 
 ```http
 POST /v1/completions
@@ -230,7 +208,7 @@ POST /v1/completions
 
 ---
 
-# Current Capabilities
+## 💡 Current Capabilities
 
 - Adaptive orchestration
 - Distributed scheduling
@@ -244,7 +222,7 @@ POST /v1/completions
 
 ---
 
-# Future Improvements
+## 🔮 Future Improvements
 
 - Kubernetes Deployment
 - Real LLM Provider Integration
@@ -256,6 +234,6 @@ POST /v1/completions
 
 ---
 
-# Author
+## ✍️ Author
 
 Shubham Dewangan
