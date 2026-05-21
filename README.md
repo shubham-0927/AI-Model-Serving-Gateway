@@ -1,214 +1,261 @@
-# AI Model Serving Gateway
+# AI Gateway Control Plane
 
-A production-oriented AI Model Serving Gateway built with FastAPI and gRPC-inspired service orchestration concepts.
-The system provides centralized API routing, authentication, rate limiting, load balancing, and model inference management for LLM-style services.
+A production-oriented AI Gateway and Orchestration Platform built with FastAPI, Redis, Celery, PostgreSQL, Prometheus, Grafana, and OpenTelemetry.
 
----
+The system acts as a centralized control plane for AI model providers, handling:
 
-## Features
+- intelligent request routing
+- retries & failover
+- rate limiting
+- distributed scheduling
+- circuit breakers
+- observability
+- token accounting
+- tenant isolation
+- queue-based orchestration
 
-* FastAPI-based API Gateway
-* API Key Authentication
-* Tier-based Rate Limiting
-* Multiple Load Balancing Policies
-
-  * Round Robin
-  * Least Load
-  * Pick First
-* Async Request Handling
-* Backend Model Server Registration
-* Health Monitoring
-* Metrics Collection
-* Scalable Microservice Architecture
-* Docker-ready Structure
-* Performance Testing Support
+The project focuses on distributed systems and AI infrastructure engineering concepts rather than only model inference.
 
 ---
 
-## Architecture
+# Features
+
+## Gateway & Routing
+
+- FastAPI-based AI Gateway
+- Provider Abstraction Layer
+- Adaptive Routing Engine
+- Load-aware Routing
+- Cost-aware Routing
+- Reliability-aware Routing
+- Streaming Response Support
+
+---
+
+## Reliability Engineering
+
+- Retry Engine with Exponential Backoff
+- Circuit Breakers
+- Provider Cooldowns
+- Failure Recovery
+- Chaos Simulation
+- Simulated Provider Failures & Latency
+
+---
+
+## Distributed Infrastructure
+
+- Redis-backed Shared State
+- Celery Workers & Scheduled Tasks
+- Queue-based Request Scheduling
+- Priority Queues
+- Weighted Fair Scheduling
+- Multi-tenant Isolation
+- Admission Control & Backpressure
+
+---
+
+## Observability
+
+- Prometheus Metrics
+- Grafana Dashboards
+- OpenTelemetry Tracing
+- Jaeger Distributed Tracing
+- Structured Logging
+- Queue & Latency Metrics
+
+---
+
+## AI Platform Features
+
+- Token Usage Accounting
+- Token Budget Enforcement
+- Cost Estimation
+- Tier-based Limits
+- API Key Authentication
+- Tenant-aware Quotas
+
+---
+
+# Architecture
 
 ```text
-                +-------------------+
-                |      Client       |
-                +---------+---------+
-                          |
-                          v
-               +--------------------+
-               |   API Gateway      |
-               |  FastAPI Server    |
-               +---------+----------+
-                         |
-          +--------------+--------------+
-          |              |              |
-          v              v              v
-   +-------------+ +-------------+ +-------------+
-   | Backend 1   | | Backend 2   | | Backend N   |
-   | Model Server| | Model Server| | Model Server|
-   +-------------+ +-------------+ +-------------+
+                        +------------------+
+                        |      Client      |
+                        +---------+--------+
+                                  |
+                                  v
+                   +-----------------------------+
+                   |     AI Gateway Control      |
+                   |         FastAPI API         |
+                   +--------------+--------------+
+                                  |
+             +--------------------+--------------------+
+             |                    |                    |
+             v                    v                    v
+
+      +-------------+      +-------------+      +-------------+
+      |   OpenAI    |      | Anthropic   |      | Future LLMs |
+      |  Provider   |      |  Provider   |      |   Provider  |
+      +-------------+      +-------------+      +-------------+
+
+                                  |
+                   +-----------------------------+
+                   |      Distributed State      |
+                   |           Redis             |
+                   +-----------------------------+
+
+                                  |
+              +--------------------------------------+
+              | Background Workers & Scheduling      |
+              | Celery + Queue Processing            |
+              +--------------------------------------+
+
+                                  |
+          +----------------------------------------------+
+          | Observability Stack                          |
+          | Prometheus + Grafana + Jaeger               |
+          +----------------------------------------------+
 ```
 
 ---
 
-## Tech Stack
+# Tech Stack
 
-* Python
-* FastAPI
-* Uvicorn
-* AsyncIO
-* gRPC Concepts
-* Docker
-* Redis (optional for rate limiting/cache)
-* Prometheus/Grafana (planned)
+| Layer | Technologies |
+|------|------|
+| API Gateway | FastAPI, Uvicorn |
+| Distributed State | Redis |
+| Background Jobs | Celery |
+| Database | PostgreSQL |
+| Reverse Proxy | Nginx |
+| Observability | Prometheus, Grafana, Jaeger |
+| Tracing | OpenTelemetry |
+| Containerization | Docker, Docker Compose |
 
 ---
 
-## Project Structure
+# Key Engineering Concepts
+
+This project implements several distributed systems and infrastructure engineering concepts:
+
+- Adaptive Request Routing
+- Distributed Circuit Breakers
+- Retry & Backoff Strategies
+- Queue Scheduling
+- Load Shedding
+- Admission Control
+- Fair Scheduling
+- Multi-tenant Isolation
+- Token Governance
+- Chaos Engineering Simulation
+- Observability-driven Infrastructure
+
+---
+
+# Project Structure
 
 ```text
-ai-model-serving-gateway/
-│
-├── gateway/
-│   ├── main.py
-│   ├── routes/
-│   ├── auth/
-│   ├── load_balancer/
-│   ├── middleware/
-│   └── utils/
-│
-├── backend/
-│   ├── model_server.py
-│   └── worker.py
-│
-├── tests/
-│
-├── performance/
-│
-├── requirements.txt
-├── Dockerfile
-└── README.md
+app/
+├── api/
+├── auth/
+├── core/
+├── providers/
+├── routing/
+├── registry/
+├── simulation/
+├── workers/
+├── metrics/
+├── tracing/
+└── scheduling/
 ```
 
 ---
 
-## Installation
+# Running the Project
 
-Clone the repository:
-
-```bash
-git clone https://github.com/your-username/ai-model-serving-gateway.git
-cd ai-model-serving-gateway
-```
-
-Create virtual environment:
+## Start Services
 
 ```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
+docker compose up --build
 ```
 
 ---
 
-## Running the Gateway
-
-Start the FastAPI gateway:
-
-```bash
-uvicorn gateway.main:app --reload
-```
-
-The server will run at:
+## API Docs
 
 ```text
-http://127.0.0.1:8000
+http://localhost:8000/docs
 ```
 
 ---
 
-## API Example
+## Grafana Dashboard
 
-### Completion Endpoint
+```text
+http://localhost:3000
+```
+
+---
+
+## Prometheus
+
+```text
+http://localhost:9090
+```
+
+---
+
+## Jaeger Tracing
+
+```text
+http://localhost:16686
+```
+
+---
+
+# Example Request
 
 ```http
-POST /completions
+POST /v1/completions
 ```
-
-Request:
 
 ```json
 {
-  "prompt": "Explain transformers in deep learning",
-  "max_tokens": 128
-}
-```
-
-Response:
-
-```json
-{
-  "response": "Transformers are neural network architectures..."
+  "prompt": "Explain distributed systems",
+  "strategy": "adaptive_routing",
+  "stream": false
 }
 ```
 
 ---
 
-## Load Balancing Policies
+# Current Capabilities
 
-| Policy      | Description                            |
-| ----------- | -------------------------------------- |
-| Round Robin | Cycles through servers sequentially    |
-| Least Load  | Selects server with lowest active load |
-| Pick First  | Always selects first healthy server    |
-
----
-
-## Planned Features
-
-* JWT Authentication
-* Distributed Service Discovery
-* Kubernetes Deployment
-* Streaming Responses
-* Request Queueing
-* GPU-aware Scheduling
-* Prometheus Metrics
-* Grafana Dashboard
-* OpenTelemetry Tracing
-* Circuit Breakers
-* Retry & Failover Logic
+- Adaptive orchestration
+- Distributed scheduling
+- Provider health tracking
+- Queue-aware traffic smoothing
+- Retry & fallback handling
+- Tenant-aware quotas
+- Streaming support
+- Token accounting
+- Distributed observability
 
 ---
 
-## Performance Goals
+# Future Improvements
 
-* Low-latency request routing
-* Horizontal scalability
-* Fault-tolerant backend handling
-* Efficient async concurrency
-
----
-
-## Future Improvements
-
-* Multi-model routing
-* Dynamic autoscaling
-* Semantic caching
-* Batch inference support
-* Request prioritization
-* Distributed tracing
+- Kubernetes Deployment
+- Real LLM Provider Integration
+- Semantic Caching
+- GPU-aware Scheduling
+- ML-driven Routing Policies
+- CI/CD Pipelines
+- Advanced Benchmarking
 
 ---
 
-## License
-
-MIT License
-
----
-
-## Author
+# Author
 
 Shubham Dewangan
