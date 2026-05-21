@@ -23,6 +23,11 @@ SUCCESS_KEY = (
     "provider:{provider}:success_count"
 )
 
+HIGH_PRIORITY_QUEUE = ("gateway:queue:high")
+LOW_PRIORITY_QUEUE = ("gateway:queue:low")
+TENANT_ACTIVE_REQUESTS_KEY = ("tenant:{user_id}:active_requests")
+TENANT_TOKEN_USAGE_KEY = ("tenant:{user_id}:tokens_used")
+
 ACTIVE_REQUESTS_KEY = ("provider:{provider}:active_requests")
 
 CIRCUIT_STATE_KEY = ("provider:{provider}:circuit_state")
@@ -310,6 +315,12 @@ class ProviderRegistry:
         # )
         # load_weight = 0.2
 
+        metadata = (
+            PROVIDER_METADATA[
+                provider_name
+            ]
+        )
+
         capacity_weight = metadata.get(
             "capacity_weight",
             1.0
@@ -321,16 +332,6 @@ class ProviderRegistry:
 
         load_score = 1 / (
             normalized_load + 1
-        )
-
-        # score = (
-        #     success_count / latency
-        # )
-
-        metadata = (
-            PROVIDER_METADATA[
-                provider_name
-            ]
         )
 
         cost = metadata[
@@ -354,6 +355,9 @@ class ProviderRegistry:
         reliability_weight = (weights["reliability"])
 
         cost_weight = weights["cost"]
+
+        # weight for current load; kept constant for now
+        load_weight = 0.2
 
         latency_score = 1 / latency
 
@@ -456,3 +460,45 @@ class ProviderRegistry:
 
         return int(value or 0)
     
+    @staticmethod
+    def increment_tenant_requests(user_id: int):
+        key = (
+            TENANT_ACTIVE_REQUESTS_KEY.format(user_id=user_id))
+        rate_limit_redis.incr(key)
+
+    @staticmethod
+    def decrement_tenant_requests(user_id: int):
+        key = (TENANT_ACTIVE_REQUESTS_KEY.format(user_id=user_id))
+        current = rate_limit_redis.get(key)
+        if current and int(current) > 0:
+            rate_limit_redis.decr(key)
+
+    @staticmethod
+    def get_tenant_requests(user_id: int):
+        key = (TENANT_ACTIVE_REQUESTS_KEY.format(user_id=user_id))
+        value = rate_limit_redis.get(key)
+        return int(value or 0)
+    
+    @staticmethod
+    def increment_token_usage(user_id: int,tokens: int):
+        key = (TENANT_TOKEN_USAGE_KEY.format(user_id=user_id))
+        rate_limit_redis.incrby(key,tokens)
+
+    @staticmethod
+    def get_token_usage(user_id: int):
+        key = (TENANT_TOKEN_USAGE_KEY.format(user_id=user_id))
+        value = rate_limit_redis.get(key)
+        return int(value or 0)
+    
+
+    @staticmethod
+    def estimate_request_cost(provider_name: str,tokens: int):
+        metadata = (PROVIDER_METADATA[provider_name])
+        cost_per_1k = metadata["cost_per_1k_tokens"]
+        return (tokens / 1000) * cost_per_1k
+    @staticmethod
+    def get_all_providers():
+
+        return list(
+            PROVIDER_METADATA.keys()
+        )

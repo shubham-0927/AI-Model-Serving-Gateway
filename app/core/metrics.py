@@ -13,3 +13,12 @@ SIMULATED_FAILURES = Counter("gateway_simulated_failures_total", "Total simulate
                              ["provider"])
 RETRY_COUNT = Counter("gateway_retry_total", "Total provider retries", ["provider"])
 PROVIDER_ACTIVE_LOAD = Gauge("provider_active_requests","Current provider active requests",["provider"])
+GLOBAL_ACTIVE_REQUESTS = Gauge("gateway_global_active_requests","Current active gateway requests")
+REJECTED_REQUESTS = Counter("gateway_rejected_requests_total","Rejected requests",["reason"])
+QUEUE_SIZE = Gauge("gateway_queue_size","Queue size",["queue"])
+SCHEDULED_REQUESTS = Counter("gateway_scheduled_requests_total","Scheduled requests",["queue"])
+QUEUE_WAIT_TIME = Histogram("gateway_queue_wait_seconds","Queue wait time")
+TENANT_REJECTIONS = Counter("gateway_tenant_rejections_total","Tenant isolation rejections",["tier"])
+TOKEN_USAGE = Counter("gateway_tokens_used_total","Total token usage",["tier"])
+ESTIMATED_COST = Counter("gateway_estimated_cost_total","Estimated provider cost",["provider"])
+

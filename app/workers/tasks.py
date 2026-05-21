@@ -1,3 +1,4 @@
+from app.core.metrics import QUEUE_SIZE, QUEUE_WAIT_TIME, SCHEDULED_REQUESTS
 from app.workers.celery_app import celery_app
 from app.db.session import SessionLocal
 from app.models.job import Job
@@ -7,6 +8,7 @@ import json
 from app.core.redis import celery_redis
 from app.core.config import settings
 from app.models.request_log import RequestLog
+from app.core.scheduler_state import SchedulerState, PREMIUM_BURST
 
 
 @celery_app.task
@@ -75,3 +77,74 @@ def flush_logs_to_db():
 
     finally:
         db.close()
+
+@celery_app.task
+def process_queued_requests():
+
+    import json
+
+    from app.core.redis import (
+        rate_limit_redis
+    )
+
+    from app.registry.provider_registry import (
+
+        HIGH_PRIORITY_QUEUE,
+
+        LOW_PRIORITY_QUEUE
+    )
+
+    # queues = [
+
+    #     HIGH_PRIORITY_QUEUE,
+
+    #     LOW_PRIORITY_QUEUE
+    # ]
+    queues = []
+
+    if(SchedulerState.premium_counter< PREMIUM_BURST):
+
+        queues = [HIGH_PRIORITY_QUEUE,LOW_PRIORITY_QUEUE]
+    else:
+        queues = [LOW_PRIORITY_QUEUE,HIGH_PRIORITY_QUEUE]
+
+    for queue_name in queues:
+
+        item = rate_limit_redis.lpop(
+            queue_name
+        )
+
+        if not item:
+
+            continue
+
+        QUEUE_SIZE.labels(
+            queue=queue_name
+        ).dec()
+
+        if queue_name == HIGH_PRIORITY_QUEUE:
+            SchedulerState.premium_counter += 1
+        else:
+            SchedulerState.premium_counter = 0
+        SCHEDULED_REQUESTS.labels(queue=queue_name).inc()
+
+        payload = json.loads(item)
+        queue_wait = (
+            time.time()
+            - payload["queued_at"]
+        )
+
+        QUEUE_WAIT_TIME.observe(
+            queue_wait
+        )
+        print(
+            "Processing queued request:",
+            payload
+        )
+        
+
+        break
+
+@celery_app.task
+def reset_daily_token_budgets():
+    pass

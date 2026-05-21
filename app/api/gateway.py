@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends
+from app.core.admission_control import should_accept_request, within_token_budget
 from app.core.api_key_auth import get_api_key
+from app.core.request_scheduler import enqueue_request
 from app.core.retry import MAX_RETRIES, exponential_backoff
 from app.models.api_key import APIKey
 import asyncio
@@ -20,7 +22,7 @@ from app.registry.provider_registry import ProviderRegistry
 import uuid
 from app.core.logger import logger
 
-from app.core.metrics import REQUEST_COUNT, REQUEST_LATENCY, FALLBACK_COUNT, ACTIVE_STREAMS, RETRY_COUNT, STREAM_COUNT
+from app.core.metrics import ESTIMATED_COST, GLOBAL_ACTIVE_REQUESTS, REJECTED_REQUESTS, REQUEST_COUNT, REQUEST_LATENCY, FALLBACK_COUNT, ACTIVE_STREAMS, RETRY_COUNT, STREAM_COUNT, TOKEN_USAGE
 from app.core.metrics import STREAM_FAILURES, STREAM_DURATION, TOKENS_STREAMED
 from app.core.tracing import tracer
 from opentelemetry import trace
@@ -102,6 +104,57 @@ async def completions(
     last_error = None
     response = None
 
+    accepted = should_accept_request(provider_name,api_key.tier, api_key.user_id)
+    if not accepted:
+        REJECTED_REQUESTS.labels(reason="overload").inc()
+        # raise HTTPException(
+
+        #     status_code=503,
+
+        #     detail=(
+        #         "Gateway overloaded. "
+        #         "Please retry later."
+        #     )
+        # )
+        payload = {"prompt": request.prompt,
+            "provider": provider_name,
+            "model": request.model,
+            "user_id": api_key.user_id,
+            "queued_at": time.time()
+        }
+        enqueue_request(payload,api_key.tier)
+
+        return {
+            "status": "queued",
+            "message": (
+                "Request queued due to "
+                "temporary overload"
+            )
+        }
+
+    estimated_tokens = max(
+        len(request.prompt.split()) * 2,
+        50
+    )
+
+    allowed = within_token_budget(
+        api_key.user_id,
+        api_key.tier,
+        estimated_tokens
+    )
+
+    if not allowed:
+
+        raise HTTPException(
+
+            status_code=403,
+
+            detail=(
+                "Token budget exceeded"
+            )
+        )
+
+
     # ---------------------------------------------------
     # Streaming Path
     # ---------------------------------------------------
@@ -117,6 +170,7 @@ async def completions(
                 provider_name
             )
         )
+        
 
         async def stream_generator():
 
@@ -150,9 +204,10 @@ async def completions(
                 STREAM_COUNT.inc()
 
                 token_count = 0
-                ProviderRegistry.increment_active_requests(candidate_provider)
+                ProviderRegistry.increment_active_requests(provider_name)
+                ProviderRegistry.increment_tenant_requests(api_key.user_id)
                 try:
-                    
+                    GLOBAL_ACTIVE_REQUESTS.inc()
 
                     async for chunk in (
                         provider.stream_response(
@@ -178,6 +233,7 @@ async def completions(
                             )
 
                             break
+                        
 
                         token_count += 1
 
@@ -211,8 +267,12 @@ async def completions(
                 finally:
 
                     ACTIVE_STREAMS.dec()
+                    GLOBAL_ACTIVE_REQUESTS.dec()
                     ProviderRegistry.decrement_active_requests(
-                        candidate_provider
+                        provider_name
+                    )
+                    ProviderRegistry.decrement_tenant_requests(
+                        api_key.user_id
                     )
 
                     STREAM_DURATION.observe(
@@ -267,124 +327,134 @@ async def completions(
         "provider_execution"
     ):
 
-        for candidate_provider in fallback_chain:
+        GLOBAL_ACTIVE_REQUESTS.inc()
+        try:
+            ProviderRegistry.increment_tenant_requests(api_key.user_id)
+            for candidate_provider in fallback_chain:
 
-            current_span = (
-                trace.get_current_span()
-            )
-
-            current_span.set_attribute(
-                "provider",
-                candidate_provider
-            )
-
-            current_span.set_attribute(
-                "model",
-                request.model or "none"
-            )
-
-            try:
-
-                provider = (
-                    ProviderFactory.get_provider(
-                        candidate_provider
-                    )
+                current_span = (
+                    trace.get_current_span()
                 )
 
-                # response = (
-                #     await provider.generate_response(
-                #         prompt=request.prompt
-                #     )
-                # )
+                current_span.set_attribute(
+                    "provider",
+                    candidate_provider
+                )
 
+                current_span.set_attribute(
+                    "model",
+                    request.model or "none"
+                )
 
-                for attempt in range(MAX_RETRIES):
-                    ProviderRegistry.increment_active_requests(
-                        candidate_provider
-                    )
+                try:
 
-                    try:
-
-                        response = (await provider.generate_response(prompt=request.prompt))
-
-                        break
-
-                    except Exception as retry_error:
-
-                        RETRY_COUNT.labels(provider=candidate_provider).inc()
-                        current_span.set_attribute("retry_attempt",attempt)
-                        logger.warning(
-                            "provider_retry",
-                            extra={
-                                "extra_data": {
-                                    "provider": candidate_provider,
-                                    "attempt": attempt + 1
-                                }
-                            }
+                    provider = (
+                        ProviderFactory.get_provider(
+                            candidate_provider
                         )
+                    )
 
-                        if attempt == MAX_RETRIES - 1:
-                            raise retry_error
-                        await exponential_backoff(attempt)
+                    # response = (
+                    #     await provider.generate_response(
+                    #         prompt=request.prompt
+                    #     )
+                    # )
 
 
-                # tokens_used = len(
-                #     str(response).split()
-                # )
+                    for attempt in range(MAX_RETRIES):
+                        ProviderRegistry.increment_active_requests(
+                            candidate_provider
+                        )
+                        
 
-                # Reset provider failures after success
-                ProviderRegistry.reset_failures(
-                    candidate_provider
-                )
+                        try:
+                            response = (await provider.generate_response(prompt=request.prompt))
 
-                # Fallback metric
-                if candidate_provider != fallback_chain[0]:
+                            break
 
-                    FALLBACK_COUNT.inc()
+                        except Exception as retry_error:
 
-                provider_name = candidate_provider
+                            RETRY_COUNT.labels(provider=candidate_provider).inc()
+                            current_span.set_attribute("retry_attempt",attempt)
+                            logger.warning(
+                                "provider_retry",
+                                extra={
+                                    "extra_data": {
+                                        "provider": candidate_provider,
+                                        "attempt": attempt + 1
+                                    }
+                                }
+                            )
 
-                break
+                            if attempt == MAX_RETRIES - 1:
+                                raise retry_error
+                            await exponential_backoff(attempt)
 
-            except Exception as e:
+                        finally:
+                            ProviderRegistry.decrement_active_requests(
+                                candidate_provider
+                            )
+                            
 
-                # Track provider failures
-                ProviderRegistry.mark_failure(
-                    candidate_provider
-                )
 
-                logger.error(
+                    # tokens_used = len(
+                    #     str(response).split()
+                    # )
 
-                    "provider_request_failed",
+                    # Reset provider failures after success
+                    ProviderRegistry.reset_failures(
+                        candidate_provider
+                    )
 
-                    extra={
+                    # Fallback metric
+                    if candidate_provider != fallback_chain[0]:
 
-                        "extra_data": {
+                        FALLBACK_COUNT.inc()
 
-                            "request_id": request_id,
+                    provider_name = candidate_provider
 
-                            "provider": candidate_provider,
+                    break
 
-                            "error": str(e)
+                except Exception as e:
+
+                    # Track provider failures
+                    ProviderRegistry.mark_failure(
+                        candidate_provider
+                    )
+
+                    logger.error(
+
+                        "provider_request_failed",
+
+                        extra={
+
+                            "extra_data": {
+
+                                "request_id": request_id,
+
+                                "provider": candidate_provider,
+
+                                "error": str(e)
                         }
                     }
+                    )
+
+                    last_error = str(e)
+
+            else:
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        f"All providers failed: "
+                        f"{last_error}"
+                    )
                 )
 
-                last_error = str(e)
-            finally:
-                ProviderRegistry.decrement_active_requests(
-                    candidate_provider
-                )
-
-        else:
-
-            raise HTTPException(
-                status_code=503,
-                detail=(
-                    f"All providers failed: "
-                    f"{last_error}"
-                )
-            )
+        finally:
+            GLOBAL_ACTIVE_REQUESTS.dec()
+            ProviderRegistry.decrement_tenant_requests(
+                                api_key.user_id
+                            )
 
     # ---------------------------------------------------
     # Metrics / Logging
@@ -396,6 +466,27 @@ async def completions(
     tokens_used = len(
         str(response).split()
     )
+
+    ProviderRegistry.increment_token_usage(
+        api_key.user_id,
+        tokens_used
+    )
+    TOKEN_USAGE.labels(
+        tier=api_key.tier
+    ).inc(tokens_used)
+
+    cost = (
+        ProviderRegistry.estimate_request_cost(
+
+            provider_name,
+
+            tokens_used
+        )
+    )
+
+    ESTIMATED_COST.labels(
+        provider=provider_name
+    ).inc(cost)
 
     queue_request_log(
         user_id=api_key.user_id,

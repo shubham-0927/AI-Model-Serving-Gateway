@@ -181,6 +181,7 @@ Separate:
 ```
 *When HALF_OPEN: allow only few test requests: VERY important
 
+
 ## exponential back-off
 * if failure happen (dont spam retries)
 ```
@@ -197,6 +198,18 @@ wait 800ms
 ```
 * add jitter with delay, wait for delay+jitter(a random nouce) time
     - it prevent **Thunderaing herd problem**(when many clients try to reattempt at the same time (simultaneuosly) cause outrage again at the server)
+
+## backpressure engineering
+* when system pressure( the gateway's pressure) becomes to high, gracefully reject or throttle requests.
+* use **Admission Control**
+
+## Bacground Scheduler
+* using redis queues: premium(higher priority), free(lower priority)
+* Worker pulls:
+    highest-priority requests first
+    when capacity available
+* 
+
 ## TO Run:
 * Run once for db/init 
 ```
