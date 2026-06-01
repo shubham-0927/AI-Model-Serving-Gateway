@@ -37,6 +37,18 @@ services:
 
     # ports:
     #   - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: ai_gateway_rabbitmq
+    
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    
+    # ports:
+    #   - "5672:5672"
+    #   - "15672:15672"
   
   prometheus:
     image: prom/prometheus
@@ -92,6 +104,7 @@ services:
     depends_on:
       - redis
       - postgres
+      - rabbitmq
 
   beat:
     build: .
@@ -105,6 +118,7 @@ services:
     depends_on:
       - redis
       - postgres
+      - rabbitmq
 
 volumes:
   postgres_data:
