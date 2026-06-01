@@ -1,8 +1,11 @@
 from celery import Celery
 from app.core.config import settings
 
-redis_url = f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_CELERY_DB}"
-celery_app = Celery("worker", broker=redis_url, backend=redis_url)
+celery_app = Celery(
+    "worker",
+    broker=settings.CELERY_BROKER_URL,
+    backend=settings.CELERY_RESULT_BACKEND
+)
 celery_app.conf.beat_schedule = {
 
     "flush-logs-every-10-seconds": {

@@ -81,6 +81,14 @@ later optimize with Redis batching
 
 * **imp** need to remove the failing logic in openai provider code.
 * Update the routing thresholds from fix developer define numbers to provider specific or use some ML model to learn the trend and update the thresholds.
+
+
+
+
+## Difficulty faced:
+* connection errors after chaning the .env file
+* updating the .env file
+* agent push .env file due to misconfigured .gitignore
 ## Implemention Notes
 
 
@@ -276,7 +284,14 @@ docker compose up
 docker compose up --build
 docker compose exec api python -c "from app.db.init_db import init_db; init_db()"
 
+
+
+
 docker compose down
+
+or manually stopping the containers
+docker rm -f ai_gateway_redis ai_gateway_postgres ai_gateway_rabbitmq ai_gateway_grafana ai_gateway_prometheus ai_gateway_jaeger ai_gateway_worker ai_gateway_nginx ai_gateway_beat
+
 ```
 ## database:
 from ire assigment "Indexing an retrieval"
