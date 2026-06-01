@@ -21,9 +21,9 @@ services:
     container_name: ai_gateway_postgres
 
     environment:
-      POSTGRES_DB: aigateway
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-aigateway}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
 
     # ports:
     #   - "5432:5432"
@@ -54,6 +54,9 @@ services:
 
     ports:
       - "3000:3000"
+    
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
   
   
   jaeger:
