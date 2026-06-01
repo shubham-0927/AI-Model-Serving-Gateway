@@ -14,8 +14,24 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from app.core.tracing import tracer
+from contextlib import asynccontextmanager
+from app.db.init_db import init_db
 
-app = FastAPI(title="Ai Model Serving Gateway")
+
+@asynccontextmanager
+async def lifespan(app):
+
+    init_db()
+
+    yield
+
+
+app = FastAPI(
+    lifespan=lifespan,
+    title="Ai Model Serving Gateway"
+)
+
+# app = FastAPI(title="Ai Model Serving Gateway")
 app.include_router(auth.router)
 app.include_router(keys.router)
 app.include_router(gateway.router)
@@ -23,6 +39,10 @@ app.include_router(jobs.router)
 app.include_router(usage.router)
 
 FastAPIInstrumentor.instrument_app(app)
+
+# @app.on_event("startup")
+# def startup_event():
+#     init_db()
 
 @app.get("/health")
 async def health():

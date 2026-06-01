@@ -290,7 +290,7 @@ docker compose exec api python -c "from app.db.init_db import init_db; init_db()
 docker compose down
 
 or manually stopping the containers
-docker rm -f ai_gateway_redis ai_gateway_postgres ai_gateway_rabbitmq ai_gateway_grafana ai_gateway_prometheus ai_gateway_jaeger ai_gateway_worker ai_gateway_nginx ai_gateway_beat
+docker rm -f ai_gateway_redis ai_gateway_postgres ai_gateway_rabbitmq ai_gateway_grafana ai_gateway_prometheus ai_gateway_jaeger ai_gateway_worker ai_gateway_nginx ai_gateway_beat ai_gateway_api
 
 ```
 ## database:
