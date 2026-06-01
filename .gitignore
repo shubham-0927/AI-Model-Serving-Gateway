@@ -84,6 +84,7 @@ uvicorn.log
 
 # Testing artifacts
 artifacts/
+test_api_key.txt
 
 # Node modules (if frontend added later)
 node_modules/
