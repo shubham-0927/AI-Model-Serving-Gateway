@@ -304,7 +304,9 @@ DROP TABLE jobs;
 DROP TABLE api_keys;
 DROP TABLE users;
 ```
-
+```
+docker exec -it ai_gateway_postgres psql -U postgres -d aigateway
+```
 ## Docker 
 * to check docker running:
 ```

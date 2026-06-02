@@ -6,6 +6,12 @@ services:
     build: .
     container_name: ai_gateway_api
 
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
     # ports:
     #   - "8000:8000"
 
