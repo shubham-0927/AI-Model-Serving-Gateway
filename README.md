@@ -153,6 +153,29 @@ The system acts as a centralized control plane for AI model providers, handling:
 ```
 
 ---
+## Deployment Infrastructure
+
+The platform is deployed on an Azure VM using Docker Compose and consists of multiple infrastructure services working together.
+
+### Services
+
+| Service | Purpose |
+|----------|----------|
+| FastAPI API Gateway | Request routing and orchestration |
+| Celery Workers | Background task processing |
+| Celery Beat | Scheduled jobs |
+| Redis | Shared state and caching |
+| PostgreSQL | Persistent storage |
+| RabbitMQ | Message broker |
+| Prometheus | Metrics collection |
+| Grafana | Observability dashboards |
+| Jaeger | Distributed tracing |
+| Nginx | Reverse proxy and ingress |
+
+### Running Containers
+
+![Docker Services](images/docker_services.png)
+
 ## Screenshots
 
 ### Grafana Observability Dashboard
